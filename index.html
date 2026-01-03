@@ -1,805 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Whack-a-Concept — Ethics & Information Security (Chapter 4)</title>
-  <style>
-    :root{
-      --bg:#f8fafc; --ink:#0f172a; --muted:#64748b;
-      --card:#ffffff; --line:#e2e8f0;
-      --accent:#2563eb; --good:#16a34a; --bad:#dc2626;
-      --hole:#e5e7eb; --mole:#dbeafe;
-      --shadow: 0 10px 25px rgba(2,6,23,.08);
-      --radius: 16px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-      color: var(--ink);
-    }
-    .wrap{max-width:1100px; margin:0 auto; padding:16px}
-    header{
-      display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
-      margin-bottom:12px;
-    }
-    .title{
-      display:flex; flex-direction:column; gap:4px;
-    }
-    h1{font-size:18px; margin:0}
-    .sub{font-size:13px; color:var(--muted); line-height:1.35}
-    .panel{
-      background:var(--card); border:1px solid var(--line); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding:12px;
-    }
-    .topbar{
-      display:grid; grid-template-columns: 1.2fr .8fr; gap:12px;
-    }
-    @media (max-width: 860px){
-      .topbar{grid-template-columns: 1fr}
-    }
-    .promptBox{
-      display:flex; flex-direction:column; gap:10px;
-    }
-    .promptLabel{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-    }
-    .badge{
-      font-size:12px; padding:4px 10px; border-radius:999px;
-      border:1px solid var(--line); background:#f8fafc; color:var(--muted);
-      white-space:nowrap;
-    }
-    .prompt{
-      font-size:16px; line-height:1.35; padding:10px 12px;
-      border-radius:12px; border:1px solid var(--line);
-      background:#f8fafc;
-      min-height:54px;
-    }
-    .hint{
-      font-size:12px; color:var(--muted);
-    }
-    .stats{
-      display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;
-    }
-    .stat{
-      border:1px solid var(--line); border-radius:12px; padding:10px; background:#f8fafc;
-    }
-    .stat .k{font-size:12px; color:var(--muted)}
-    .stat .v{font-size:18px; font-weight:700; margin-top:3px}
-    .controls{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px;
-    }
-    button{
-      border:1px solid var(--line); background:var(--card); color:var(--ink);
-      border-radius:12px; padding:10px 12px; font-weight:600; cursor:pointer;
-      box-shadow: 0 6px 14px rgba(2,6,23,.06);
-    }
-    button.primary{
-      background: var(--accent); border-color: #1d4ed8; color:#fff;
-    }
-    button:disabled{opacity:.55; cursor:not-allowed}
-    .select{
-      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
-      font-size:13px; color:var(--muted);
-    }
-    select{
-      border:1px solid var(--line); border-radius:12px; padding:10px 12px;
-      background:#fff; color:var(--ink);
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Whack-a-Concept — Ethics & Information Security</title>
 
-    /* Game board */
-    .boardWrap{margin-top:12px}
-    .board{
-      position:relative;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:12px;
-      overflow:hidden;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:12px;
-    }
-    @media (max-width: 520px){
-      .grid{gap:10px}
-    }
-    .hole{
-      position:relative;
-      background: radial-gradient(circle at 30% 20%, #f1f5f9 0%, var(--hole) 75%);
-      border:1px solid var(--line);
-      border-radius:18px;
-      min-height:110px;
-      display:flex; align-items:center; justify-content:center;
-      user-select:none;
-      touch-action: manipulation;
-    }
-    @media (max-width:520px){
-      .hole{min-height:96px}
-    }
-    .mole{
-      position:absolute;
-      inset:10px;
-      border-radius:14px;
-      border:1px solid #bfdbfe;
-      background: linear-gradient(180deg, #eff6ff 0%, var(--mole) 100%);
-      display:flex; align-items:center; justify-content:center;
-      padding:10px;
-      text-align:center;
-      font-weight:800;
-      color:#0b2a6f;
-      line-height:1.15;
-      box-shadow: 0 10px 22px rgba(2,6,23,.10);
-      transform: translateY(16px);
-      opacity:0;
-      pointer-events:none;
-      transition: transform .14s ease, opacity .14s ease;
-    }
-    .mole.show{
-      transform: translateY(0);
-      opacity:1;
-      pointer-events:auto;
-    }
-    .mole .small{
-      font-weight:700;
-      font-size:12px;
-      color:#1e3a8a;
-      opacity:.92;
-    }
+<style>
+:root{
+  --bg:#f8fafc; --ink:#0f172a; --muted:#64748b;
+  --card:#ffffff; --line:#e2e8f0;
+  --accent:#2563eb; --good:#16a34a; --bad:#dc2626;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:system-ui,Segoe UI,Roboto,Arial;
+  background:var(--bg); color:var(--ink);
+}
+.wrap{max-width:1100px;margin:auto;padding:16px}
+.panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:14px;
+}
+h1{font-size:18px;margin:0 0 6px}
+.sub{font-size:13px;color:var(--muted)}
 
-    /* Feedback */
-    .toast{
-      position:absolute; left:12px; right:12px; top:12px;
-      display:flex; justify-content:center;
-      pointer-events:none;
-      transform: translateY(-6px);
-      opacity:0;
-      transition: opacity .14s ease, transform .14s ease;
-    }
-    .toast.show{
-      opacity:1;
-      transform: translateY(0);
-    }
-    .toast span{
-      font-size:18px; font-weight:900;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      box-shadow: var(--shadow);
-      background:#fff;
-    }
-    .toast.good span{border-color:#bbf7d0; color:var(--good)}
-    .toast.bad span{border-color:#fecaca; color:var(--bad)}
-    .shake{
-      animation: shake .22s ease-in-out;
-    }
-    @keyframes shake{
-      0%{transform: translateX(0)}
-      25%{transform: translateX(-3px)}
-      50%{transform: translateX(3px)}
-      75%{transform: translateX(-2px)}
-      100%{transform: translateX(0)}
-    }
+button{
+  padding:10px 14px;border-radius:12px;
+  border:1px solid var(--line);
+  background:#fff;font-weight:600;
+  cursor:pointer;
+}
+button.primary{
+  background:var(--accent);color:#fff;border-color:#1d4ed8;
+}
 
-    /* Footer / instructions */
-    .foot{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 11px;
-      padding: 2px 6px;
-      border:1px solid var(--line);
-      border-bottom-width:2px;
-      border-radius:8px;
-      background:#fff;
-      color:var(--ink);
-      white-space:nowrap;
-    }
-    .srOnly{
-      position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;
-    }
-  </style>
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;margin-top:14px;
+}
+.hole{
+  min-height:110px;
+  background:#e5e7eb;
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.mole{
+  position:absolute;inset:8px;
+  background:#dbeafe;
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;text-align:center;
+  cursor:pointer;
+}
+.toast{
+  font-size:18px;font-weight:800;
+  margin-top:10px;
+}
+.good{color:var(--good)}
+.bad{color:var(--bad)}
+
+.answers{
+  margin-top:14px;
+  max-height:260px;
+  overflow:auto;
+  border-top:1px solid var(--line);
+  padding-top:10px;
+}
+.answers h3{margin:0 0 8px;font-size:15px}
+.answers li{
+  font-size:13px;
+  margin-bottom:6px;
+}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <div class="title">
-        <h1>Whack-a-Concept — Ethics & Information Security (Chapter 4)</h1>
-        <div class="sub">
-          Tap the correct concept when it appears. No speed pressure, no tricky rules.
-        </div>
-      </div>
-      <div class="panel" style="min-width:260px">
-        <div style="font-size:12px;color:var(--muted)">Session ID (optional)</div>
-        <input id="pid" type="text" placeholder="e.g., UOU-CS-2026-01"
-               style="width:100%;margin-top:6px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);outline:none" />
-        <div class="hint" style="margin-top:6px">
-          Used only to keep your score on this device (localStorage).
-        </div>
-      </div>
-    </header>
+<div class="wrap">
+  <h1>Whack-a-Concept</h1>
+  <div class="sub">Ethical Aspects of Information Security (Chapter 4)</div>
 
-    <section class="topbar">
-      <div class="panel promptBox" aria-live="polite">
-        <div class="promptLabel">
-          <div style="font-weight:800">Prompt</div>
-          <div class="badge" id="roundBadge">Round: 0 / 0</div>
-        </div>
-        <div class="prompt" id="promptText">Press Start to begin.</div>
-        <div class="hint" id="promptHint">Tip: Focus on understanding the concept, not speed.</div>
+  <div class="panel" style="margin-top:12px">
+    <div id="prompt">Press Start to begin.</div>
 
-        <div class="controls">
-          <button class="primary" id="startBtn">Start</button>
-          <button id="pauseBtn" disabled>Pause</button>
-          <button id="resetBtn">Reset</button>
+    <div style="margin-top:10px">
+      <button class="primary" id="startBtn">Start</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-          <div class="select">
-            Difficulty:
-            <select id="difficulty">
-              <option value="easy">Easy (slower)</option>
-              <option value="normal" selected>Normal</option>
-              <option value="fast">Fast (still low load)</option>
-            </select>
-          </div>
+    <div class="grid" id="grid"></div>
 
-          <div class="select">
-            Rounds:
-            <select id="roundsSel">
-              <option value="8">8</option>
-              <option value="10" selected>10</option>
-              <option value="12">12</option>
-              <option value="15">15</option>
-            </select>
-          </div>
-        </div>
-      </div>
+    <div id="feedback" class="toast"></div>
 
-      <div class="panel">
-        <div class="stats">
-          <div class="stat">
-            <div class="k">Score</div>
-            <div class="v" id="score">0</div>
-          </div>
-          <div class="stat">
-            <div class="k">Correct</div>
-            <div class="v" id="correct">0</div>
-          </div>
-          <div class="stat">
-            <div class="k">Wrong</div>
-            <div class="v" id="wrong">0</div>
-          </div>
-        </div>
-
-        <div style="margin-top:10px; border-top:1px solid var(--line); padding-top:10px">
-          <div class="k" style="font-size:12px;color:var(--muted)">Best score (this device)</div>
-          <div class="v" id="best" style="font-size:18px;font-weight:800">0</div>
-          <div class="hint" style="margin-top:6px">
-            Keyboard: <span class="kbd">1</span>–<span class="kbd">9</span> to tap holes, <span class="kbd">Space</span> pause/resume.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="boardWrap">
-      <div class="board" id="board">
-        <div class="toast" id="toast"><span>Correct!</span></div>
-
-        <div class="grid" id="grid" role="application" aria-label="Whack a concept board">
-          <!-- 9 holes -->
-        </div>
-
-        <div class="foot">
-          How it works: each round has one correct concept. Options appear one at a time in the holes. Tap the correct one.
-          If you tap a wrong one, you get immediate feedback and you can try again in the same round.
-        </div>
-      </div>
-    </section>
-
-    <p class="foot">
-      Content basis: Ethical aspects of information security, privacy, cybercrime, dataveillance, biometrics, and related terms from your Chapter 4 unit. :contentReference[oaicite:1]{index=1}
-    </p>
+    <!-- ANSWER REVIEW -->
+    <div id="answerReview" class="answers" style="display:none">
+      <h3>Correct Answers (Review)</h3>
+      <ol id="answerList"></ol>
+    </div>
   </div>
-
-  <script>
-    /***********************
-     * 1) QUESTION BANK (EDIT HERE)
-     * Each item = { prompt, correct, distractors[] }
-     * Keep options short (1–3 words when possible).
-     ***********************/
-    const QUESTION_BANK = [
-      { prompt: "Ethics approach: actions are wrong if they have bad consequences.", correct: "Consequentialism",
-        distractors: ["Deontology", "Dataveillance", "Cyberpiracy"] },
-
-      { prompt: "Ethics approach: people have moral duties independent of consequences.", correct: "Deontology",
-        distractors: ["Consequentialism", "Cybersecurity", "Spyware"] },
-
-      { prompt: "Protection of data on disks or in transmission.", correct: "Information security",
-        distractors: ["System security", "Hacktivism", "Computer matching"] },
-
-      { prompt: "Protection of hardware and software resources from sabotage.", correct: "System security",
-        distractors: ["Information security", "Data mining", "Cookies"] },
-
-      { prompt: "Three classic aspects of information security.", correct: "CIA triad",
-        distractors: ["VPN & Tor", "Two-factor auth", "Public key"] },
-
-      { prompt: "CIA triad: 'C' stands for", correct: "Confidentiality",
-        distractors: ["Continuity", "Control", "Compliance"] },
-
-      { prompt: "CIA triad: 'I' stands for", correct: "Integrity",
-        distractors: ["Identity", "Inspection", "Infrastructure"] },
-
-      { prompt: "CIA triad: 'A' stands for", correct: "Availability",
-        distractors: ["Authorization", "Accountability", "Anonymity"] },
-
-      { prompt: "Unauthorized access to computer resources using skills.", correct: "Hacking",
-        distractors: ["Biometrics", "Informed consent", "Record merging"] },
-
-      { prompt: "Malicious break-ins intended to steal/corrupt/disrupt (hacker vs cracker idea).", correct: "Cracking",
-        distractors: ["Hacking", "Hacktivism", "Cyberpiracy"] },
-
-      { prompt: "Cybercrime: unauthorized access to systems or password-protected sites.", correct: "Cybertrespass",
-        distractors: ["Cybervandalism", "Cyberpiracy", "Dataveillance"] },
-
-      { prompt: "Cybercrime: programs that disrupt networks or corrupt data.", correct: "Cybervandalism",
-        distractors: ["Cybertrespass", "Cyberpiracy", "Biometrics"] },
-
-      { prompt: "Reproducing/distributing proprietary software or information.", correct: "Cyberpiracy",
-        distractors: ["Cyberterrorism", "Computer matching", "Ambient intelligence"] },
-
-      { prompt: "Politically motivated hacking intended to cause grave harm.", correct: "Cyberterrorism",
-        distractors: ["Hacktivism", "Cyberpiracy", "Cybertrespass"] },
-
-      { prompt: "Political hacking that disrupts operations without intent of serious damage.", correct: "Hacktivism",
-        distractors: ["Cyberterrorism", "Cybervandalism", "Dataveillance"] },
-
-      { prompt: "Large-scale computerized monitoring of actions and communications.", correct: "Dataveillance",
-        distractors: ["Integrity", "Firewall", "Informed consent"] },
-
-      { prompt: "Small data packets for authentication/tracking on the web.", correct: "Cookies",
-        distractors: ["Spyware", "Biometrics", "Contextual integrity"] },
-
-      { prompt: "Malicious programs that collect data or browser behavior and send it out.", correct: "Spyware",
-        distractors: ["Cookies", "VPN", "Deontology"] },
-
-      { prompt: "Combining different databases to create new composite records.", correct: "Record merging",
-        distractors: ["Computer matching", "Hacktivism", "Availability"] },
-
-      { prompt: "Cross-checking unrelated databases to produce 'hits' for a profile.", correct: "Computer matching",
-        distractors: ["Record merging", "Data mining", "Cyberpiracy"] },
-
-      { prompt: "Automatically searching large data volumes for patterns.", correct: "Data mining",
-        distractors: ["Dataveillance", "Computer matching", "Cracking"] },
-
-      { prompt: "Privacy: right of individuals to control access to their private affairs.", correct: "Privacy right",
-        distractors: ["Availability", "Cybersecurity", "Cybertrespass"] },
-
-      { prompt: "Privacy principle: citizens should be informed and asked for consent.", correct: "Informed consent",
-        distractors: ["Hacktivism", "Cybervandalism", "Integrity"] },
-
-      { prompt: "Privacy concern: large-scale surveillance in public violates what, per Nissenbaum?", correct: "Contextual integrity",
-        distractors: ["CIA triad", "Cyberpiracy", "System security"] },
-
-      { prompt: "Identity verification using physiological or behavioral characteristics.", correct: "Biometrics",
-        distractors: ["Cookies", "Record merging", "Hacktivism"] },
-
-      { prompt: "Computers embedded invisibly in everyday environments.", correct: "Ubiquitous computing",
-        distractors: ["Cybervandalism", "Cybertrespass", "Deontology"] },
-
-      { prompt: "Advanced ubiquitous computing using profiling + context awareness.", correct: "Ambient intelligence",
-        distractors: ["System security", "Cyberpiracy", "Availability"] },
-
-      { prompt: "Systems where corruption can directly threaten life (e.g., reactor, aircraft).", correct: "Safety-critical systems",
-        distractors: ["Consumer surveillance", "Cyberpiracy", "Cookies"] },
-
-      { prompt: "Security conception focused on protecting nation-state interests.", correct: "Cybersecurity",
-        distractors: ["Technical security", "Data mining", "Biometrics"] },
-
-      { prompt: "Classical/ordinary conception used by technical community.", correct: "Technical security",
-        distractors: ["Cybersecurity", "Hacktivism", "Dataveillance"] }
-    ];
-
-    /***********************
-     * 2) GAME SETTINGS
-     ***********************/
-    const DIFF = {
-      easy:   { showMs: 950, hideMs: 450, roundTimeMs: 16000 },
-      normal: { showMs: 800, hideMs: 420, roundTimeMs: 14000 },
-      fast:   { showMs: 680, hideMs: 380, roundTimeMs: 12000 }
-    };
-
-    /***********************
-     * 3) UI + GAME STATE
-     ***********************/
-    const grid = document.getElementById("grid");
-    const board = document.getElementById("board");
-    const promptText = document.getElementById("promptText");
-    const promptHint = document.getElementById("promptHint");
-    const toast = document.getElementById("toast");
-    const roundBadge = document.getElementById("roundBadge");
-
-    const startBtn = document.getElementById("startBtn");
-    const pauseBtn = document.getElementById("pauseBtn");
-    const resetBtn = document.getElementById("resetBtn");
-
-    const scoreEl = document.getElementById("score");
-    const correctEl = document.getElementById("correct");
-    const wrongEl = document.getElementById("wrong");
-    const bestEl = document.getElementById("best");
-
-    const difficultySel = document.getElementById("difficulty");
-    const roundsSel = document.getElementById("roundsSel");
-    const pidInput = document.getElementById("pid");
-
-    // Create 9 holes
-    const holes = [];
-    for(let i=0;i<9;i++){
-      const hole = document.createElement("div");
-      hole.className = "hole";
-      hole.setAttribute("data-idx", String(i));
-      hole.innerHTML = `<div class="srOnly">Hole ${i+1}</div>`;
-      grid.appendChild(hole);
-      holes.push(hole);
-    }
-
-    let running = false;
-    let paused = false;
-
-    let score = 0, correct = 0, wrong = 0;
-    let best = 0;
-
-    let roundIndex = 0;
-    let totalRounds = Number(roundsSel.value);
-
-    let currentQ = null;
-    let currentCorrect = "";
-    let currentPool = [];
-    let usedQuestions = [];
-
-    // timers
-    let spawnTimer = null;
-    let roundTimer = null;
-
-    // active mole references by hole index
-    const activeMoles = new Array(9).fill(null);
-
-    function storageKey(){
-      const pid = (pidInput.value || "UOU-Whack").trim();
-      return "UOU_WHACKA_CONCEPT_BEST_" + pid;
-    }
-
-    function loadBest(){
-      const v = Number(localStorage.getItem(storageKey()) || "0");
-      best = isFinite(v) ? v : 0;
-      bestEl.textContent = String(best);
-    }
-    function saveBest(){
-      localStorage.setItem(storageKey(), String(best));
-    }
-
-    // Refresh best if pid changes
-    pidInput.addEventListener("change", () => loadBest());
-
-    loadBest();
-
-    function setStats(){
-      scoreEl.textContent = String(score);
-      correctEl.textContent = String(correct);
-      wrongEl.textContent = String(wrong);
-      bestEl.textContent = String(best);
-    }
-
-    function setToast(type, text){
-      toast.classList.remove("good","bad","show");
-      toast.classList.add(type === "good" ? "good" : "bad");
-      toast.querySelector("span").textContent = text;
-      requestAnimationFrame(() => toast.classList.add("show"));
-      setTimeout(() => toast.classList.remove("show"), 420);
-    }
-
-    function tinyShake(){
-      board.classList.remove("shake");
-      void board.offsetWidth;
-      board.classList.add("shake");
-      setTimeout(()=>board.classList.remove("shake"), 240);
-    }
-
-    function clearMoleAt(idx){
-      const m = activeMoles[idx];
-      if(!m) return;
-      m.classList.remove("show");
-      m.style.pointerEvents = "none";
-      setTimeout(()=>{
-        if(m && m.parentNode) m.parentNode.removeChild(m);
-      }, 160);
-      activeMoles[idx] = null;
-    }
-
-    function clearAllMoles(){
-      for(let i=0;i<9;i++) clearMoleAt(i);
-    }
-
-    function pickQuestions(n){
-      // random without replacement as much as possible
-      const pool = QUESTION_BANK.slice();
-      // shuffle
-      for(let i=pool.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      return pool.slice(0, Math.min(n, pool.length));
-    }
-
-    function startGame(){
-      if(running) return;
-      running = true;
-      paused = false;
-
-      score = 0; correct = 0; wrong = 0;
-      totalRounds = Number(roundsSel.value);
-      roundIndex = 0;
-
-      usedQuestions = pickQuestions(totalRounds);
-      startBtn.disabled = true;
-      pauseBtn.disabled = false;
-      pauseBtn.textContent = "Pause";
-
-      setStats();
-      nextRound();
-    }
-
-    function pauseToggle(){
-      if(!running) return;
-      paused = !paused;
-      pauseBtn.textContent = paused ? "Resume" : "Pause";
-
-      if(paused){
-        stopTimers();
-        // keep current moles visible but disable taps
-        for(let i=0;i<9;i++){
-          if(activeMoles[i]) activeMoles[i].style.pointerEvents = "none";
-        }
-        promptHint.textContent = "Paused. Press Resume to continue.";
-      }else{
-        // re-enable taps on visible moles
-        for(let i=0;i<9;i++){
-          if(activeMoles[i]) activeMoles[i].style.pointerEvents = "auto";
-        }
-        promptHint.textContent = "Tap the correct concept when it appears.";
-        resumeTimers();
-      }
-    }
-
-    function resetGame(){
-      running = false;
-      paused = false;
-      stopTimers();
-      clearAllMoles();
-      currentQ = null;
-      promptText.textContent = "Press Start to begin.";
-      promptHint.textContent = "Tip: Focus on understanding the concept, not speed.";
-      roundBadge.textContent = "Round: 0 / 0";
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-      pauseBtn.textContent = "Pause";
-
-      // do not wipe best
-      score = 0; correct = 0; wrong = 0;
-      setStats();
-      loadBest();
-    }
-
-    function stopTimers(){
-      if(spawnTimer) clearInterval(spawnTimer);
-      if(roundTimer) clearTimeout(roundTimer);
-      spawnTimer = null;
-      roundTimer = null;
-    }
-
-    function resumeTimers(){
-      const d = DIFF[difficultySel.value] || DIFF.normal;
-      spawnTimer = setInterval(spawnOne, d.showMs + d.hideMs);
-      roundTimer = setTimeout(()=> endRound(false), d.roundTimeMs);
-    }
-
-    function nextRound(){
-      stopTimers();
-      clearAllMoles();
-
-      if(roundIndex >= totalRounds){
-        endGame();
-        return;
-      }
-
-      currentQ = usedQuestions[roundIndex] || QUESTION_BANK[Math.floor(Math.random()*QUESTION_BANK.length)];
-      currentCorrect = currentQ.correct;
-
-      // Create option pool = correct + 3 distractors (unique)
-      const opts = [currentQ.correct, ...currentQ.distractors].filter(Boolean);
-      const unique = [];
-      for(const o of opts){
-        if(!unique.includes(o)) unique.push(o);
-      }
-      // Ensure at least 4 options
-      while(unique.length < 4){
-        const r = QUESTION_BANK[Math.floor(Math.random()*QUESTION_BANK.length)].correct;
-        if(!unique.includes(r)) unique.push(r);
-      }
-      currentPool = unique.slice(0,4);
-
-      promptText.textContent = currentQ.prompt;
-      promptHint.textContent = "Tap the correct concept when it appears.";
-      roundBadge.textContent = `Round: ${roundIndex+1} / ${totalRounds}`;
-
-      // Start timers
-      const d = DIFF[difficultySel.value] || DIFF.normal;
-      spawnTimer = setInterval(spawnOne, d.showMs + d.hideMs);
-      roundTimer = setTimeout(()=> endRound(false), d.roundTimeMs);
-
-      // also spawn immediately for responsiveness
-      spawnOne();
-    }
-
-    function spawnOne(){
-      if(!running || paused) return;
-
-      // Choose a random hole that is currently empty
-      const emptyIdx = [];
-      for(let i=0;i<9;i++){
-        if(!activeMoles[i]) emptyIdx.push(i);
-      }
-      if(emptyIdx.length === 0) return;
-
-      const idx = emptyIdx[Math.floor(Math.random()*emptyIdx.length)];
-      const hole = holes[idx];
-
-      // Choose an option to show
-      const option = currentPool[Math.floor(Math.random()*currentPool.length)];
-
-      const mole = document.createElement("div");
-      mole.className = "mole";
-      mole.setAttribute("role", "button");
-      mole.setAttribute("tabindex", "0");
-      mole.setAttribute("aria-label", `Option ${option}`);
-
-      mole.innerHTML = `
-        <div>
-          <div style="font-size:16px">${escapeHtml(option)}</div>
-          <div class="small">Tap</div>
-        </div>
-      `;
-
-      mole.addEventListener("click", () => onHit(option, idx));
-      mole.addEventListener("keydown", (e) => {
-        if(e.key === "Enter" || e.key === " "){
-          e.preventDefault();
-          onHit(option, idx);
-        }
-      });
-
-      hole.appendChild(mole);
-      activeMoles[idx] = mole;
-
-      // show
-      requestAnimationFrame(()=>mole.classList.add("show"));
-
-      // hide after a short duration (not harsh)
-      const d = DIFF[difficultySel.value] || DIFF.normal;
-      setTimeout(()=>{
-        if(activeMoles[idx] === mole){
-          clearMoleAt(idx);
-        }
-      }, d.showMs);
-    }
-
-    function onHit(option, holeIdx){
-      if(!running || paused) return;
-
-      // remove that mole
-      clearMoleAt(holeIdx);
-
-      if(option === currentCorrect){
-        correct += 1;
-        score += 10;
-        setStats();
-        setToast("good", "Correct!");
-        endRound(true);
-      }else{
-        wrong += 1;
-        score = Math.max(0, score - 2);
-        setStats();
-        setToast("bad", "Wrong!");
-        tinyShake();
-      }
-    }
-
-    function endRound(solved){
-      if(!running) return;
-      stopTimers();
-      clearAllMoles();
-
-      // Small guidance text
-      if(solved){
-        promptHint.textContent = "Good. Next prompt is coming…";
-      }else{
-        promptHint.textContent = `Time ended. Correct concept: ${currentCorrect}. Next prompt is coming…`;
-      }
-
-      roundIndex += 1;
-
-      setTimeout(()=> {
-        if(running) nextRound();
-      }, 650);
-    }
-
-    function endGame(){
-      running = false;
-      paused = false;
-      stopTimers();
-      clearAllMoles();
-
-      if(score > best){
-        best = score;
-        saveBest();
-      }
-      setStats();
-      loadBest();
-
-      promptText.textContent = `Finished. Your score: ${score}. Correct: ${correct}, Wrong: ${wrong}.`;
-      promptHint.textContent = "You can press Start to play again (new random set).";
-
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-      pauseBtn.textContent = "Pause";
-      roundBadge.textContent = `Round: ${totalRounds} / ${totalRounds}`;
-    }
-
-    // Keyboard mapping: 1–9 taps holes (if a mole is visible)
-    document.addEventListener("keydown", (e) => {
-      if(e.key === " "){
-        if(running){
-          e.preventDefault();
-          pauseToggle();
-        }
-        return;
-      }
-      const k = e.key;
-      if(k >= "1" && k <= "9"){
-        const idx = Number(k) - 1;
-        const mole = activeMoles[idx];
-        if(mole && running && !paused){
-          mole.click();
-        }
-      }
-    });
-
-    startBtn.addEventListener("click", startGame);
-    pauseBtn.addEventListener("click", pauseToggle);
-    resetBtn.addEventListener("click", resetGame);
-
-    // Update rounds selection mid-idle
-    roundsSel.addEventListener("change", () => {
-      if(!running){
-        totalRounds = Number(roundsSel.value);
-        roundBadge.textContent = "Round: 0 / 0";
-      }
-    });
-
-    // Helpers
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-  </script>
+</div>
+
+<script>
+/* ---------------- QUESTION BANK ---------------- */
+const QUESTIONS = [
+ {q:"Actions are judged by their consequences.", a:"Consequentialism",
+  d:["Deontology","Dataveillance","Cyberpiracy"]},
+
+ {q:"Moral duties exist independent of outcomes.", a:"Deontology",
+  d:["Consequentialism","Spyware","Cybersecurity"]},
+
+ {q:"Protection of data during storage or transmission.", a:"Information security",
+  d:["System security","Hacktivism","Computer matching"]},
+
+ {q:"Protection of hardware and software resources.", a:"System security",
+  d:["Information security","Cookies","Data mining"]},
+
+ {q:"Three pillars of information security.", a:"CIA triad",
+  d:["VPN","Authentication","Encryption"]},
+
+ {q:"Unauthorized system access using skills.", a:"Hacking",
+  d:["Biometrics","Record merging","Informed consent"]},
+
+ {q:"Illegal copying of proprietary software.", a:"Cyberpiracy",
+  d:["Hacktivism","Cyberterrorism","Cybertrespass"]},
+
+ {q:"Large-scale electronic monitoring.", a:"Dataveillance",
+  d:["Cookies","Integrity","Firewall"]},
+
+ {q:"Identity verification using physical traits.", a:"Biometrics",
+  d:["Spyware","Cookies","Record merging"]},
+
+ {q:"Context-aware pervasive computing.", a:"Ambient intelligence",
+  d:["Ubiquitous computing","System security","Availability"]}
+];
+
+/* ---------------- GAME STATE ---------------- */
+const grid = document.getElementById("grid");
+const promptEl = document.getElementById("prompt");
+const feedback = document.getElementById("feedback");
+const answerReview = document.getElementById("answerReview");
+const answerList = document.getElementById("answerList");
+
+let current = 0;
+let played = [];
+let running = false;
+
+/* ---------------- INIT GRID ---------------- */
+for(let i=0;i<9;i++){
+  const h=document.createElement("div");
+  h.className="hole";
+  grid.appendChild(h);
+}
+
+/* ---------------- GAME LOGIC ---------------- */
+function startGame(){
+  running=true;
+  current=0;
+  played=[];
+  answerReview.style.display="none";
+  nextQuestion();
+}
+
+function nextQuestion(){
+  grid.innerHTML="";
+  feedback.textContent="";
+
+  if(current>=QUESTIONS.length){
+    endGame();
+    return;
+  }
+
+  const Q = QUESTIONS[current];
+  played.push(Q);
+
+  promptEl.textContent = Q.q;
+
+  const options = [Q.a,...Q.d].sort(()=>Math.random()-0.5);
+
+  options.forEach(opt=>{
+    const m=document.createElement("div");
+    m.className="mole";
+    m.textContent=opt;
+    m.onclick=()=>select(opt,Q.a);
+    grid.children[Math.floor(Math.random()*9)].appendChild(m);
+  });
+}
+
+function select(choice, correct){
+  if(!running) return;
+
+  if(choice===correct){
+    feedback.textContent="Correct!";
+    feedback.className="toast good";
+    current++;
+    setTimeout(nextQuestion,600);
+  }else{
+    feedback.textContent="Wrong!";
+    feedback.className="toast bad";
+  }
+}
+
+function endGame(){
+  running=false;
+  promptEl.textContent="Game Over. Review correct answers below.";
+  grid.innerHTML="";
+  feedback.textContent="";
+
+  answerList.innerHTML="";
+  played.forEach((q,i)=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<strong>Q${i+1}:</strong> ${q.q}<br>
+                  <em>Correct answer:</em> ${q.a}`;
+    answerList.appendChild(li);
+  });
+
+  answerReview.style.display="block";
+}
+
+/* ---------------- CONTROLS ---------------- */
+document.getElementById("startBtn").onclick=startGame;
+document.getElementById("resetBtn").onclick=()=>location.reload();
+</script>
 </body>
 </html>
