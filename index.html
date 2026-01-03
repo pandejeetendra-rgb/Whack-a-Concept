@@ -6,76 +6,89 @@
 <title>Whack-a-Concept — Ethics & Information Security</title>
 
 <style>
-:root{
-  --bg:#f8fafc; --ink:#0f172a; --muted:#64748b;
-  --card:#ffffff; --line:#e2e8f0;
-  --accent:#2563eb; --good:#16a34a; --bad:#dc2626;
-  --radius:16px;
-}
-*{box-sizing:border-box}
-body{
-  margin:0; font-family:system-ui,Segoe UI,Roboto,Arial;
-  background:var(--bg); color:var(--ink);
-}
-.wrap{max-width:1100px;margin:auto;padding:16px}
-.panel{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:14px;
-}
-h1{font-size:18px;margin:0 0 6px}
-.sub{font-size:13px;color:var(--muted)}
+  :root{
+    --bg:#f8fafc; --ink:#0f172a; --muted:#64748b;
+    --card:#ffffff; --line:#e2e8f0;
+    --accent:#2563eb; --good:#16a34a; --bad:#dc2626;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1100px;margin:auto;padding:16px}
+  h1{font-size:18px;margin:0 0 6px}
+  .sub{font-size:13px;color:var(--muted);line-height:1.35}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  button{
+    padding:10px 14px;border-radius:12px;border:1px solid var(--line);
+    background:#fff;font-weight:700;cursor:pointer;
+  }
+  button.primary{background:var(--accent);color:#fff;border-color:#1d4ed8}
+  button:disabled{opacity:.55;cursor:not-allowed}
 
-button{
-  padding:10px 14px;border-radius:12px;
-  border:1px solid var(--line);
-  background:#fff;font-weight:600;
-  cursor:pointer;
-}
-button.primary{
-  background:var(--accent);color:#fff;border-color:#1d4ed8;
-}
+  .toprow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .prompt{
+    margin-top:10px;
+    padding:12px;
+    background:#f1f5f9;
+    border:1px solid var(--line);
+    border-radius:12px;
+    font-size:16px;
+    line-height:1.35;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:14px;
+  }
+  .hole{
+    min-height:110px;
+    background:#e5e7eb;
+    border:1px solid var(--line);
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+  }
+  @media (max-width:520px){ .hole{min-height:96px} }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;margin-top:14px;
-}
-.hole{
-  min-height:110px;
-  background:#e5e7eb;
-  border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  position:relative;
-}
-.mole{
-  position:absolute;inset:8px;
-  background:#dbeafe;
-  border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;text-align:center;
-  cursor:pointer;
-}
-.toast{
-  font-size:18px;font-weight:800;
-  margin-top:10px;
-}
-.good{color:var(--good)}
-.bad{color:var(--bad)}
+  .mole{
+    position:absolute;
+    inset:8px;
+    background:#dbeafe;
+    border:1px solid #bfdbfe;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    text-align:center;
+    padding:10px;
+    cursor:pointer;
+    user-select:none;
+    transform: translateY(10px);
+    opacity:0;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  .mole.show{transform: translateY(0);opacity:1}
 
-.answers{
-  margin-top:14px;
-  max-height:260px;
-  overflow:auto;
-  border-top:1px solid var(--line);
-  padding-top:10px;
-}
-.answers h3{margin:0 0 8px;font-size:15px}
-.answers li{
-  font-size:13px;
-  margin-bottom:6px;
-}
+  .toast{font-size:18px;font-weight:900;margin-top:12px;min-height:24px}
+  .good{color:var(--good)}
+  .bad{color:var(--bad)}
+
+  .answers{
+    margin-top:14px;
+    max-height:280px;
+    overflow:auto;
+    border-top:1px solid var(--line);
+    padding-top:10px;
+    display:none;
+  }
+  .answers h3{margin:0 0 8px;font-size:15px}
+  .answers li{font-size:13px;margin:0 0 10px;line-height:1.35}
+  .meta{font-size:12px;color:var(--muted);margin-top:8px}
 </style>
 </head>
 
@@ -85,19 +98,26 @@ button.primary{
   <div class="sub">Ethical Aspects of Information Security (Chapter 4)</div>
 
   <div class="panel" style="margin-top:12px">
-    <div id="prompt">Press Start to begin.</div>
-
-    <div style="margin-top:10px">
+    <div class="toprow">
       <button class="primary" id="startBtn">Start</button>
+      <button id="pauseBtn" disabled>Pause</button>
       <button id="resetBtn">Reset</button>
+
+      <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap">
+        <div class="meta">Round: <strong id="roundLabel">0/0</strong></div>
+        <div class="meta">Correct: <strong id="correctLabel">0</strong></div>
+        <div class="meta">Wrong: <strong id="wrongLabel">0</strong></div>
+      </div>
     </div>
 
-    <div class="grid" id="grid"></div>
+    <div class="prompt" id="prompt">Press Start to begin.</div>
+
+    <div id="grid" class="grid" aria-label="Game Board"></div>
 
     <div id="feedback" class="toast"></div>
 
-    <!-- ANSWER REVIEW -->
-    <div id="answerReview" class="answers" style="display:none">
+    <!-- Answer Review -->
+    <div id="answerReview" class="answers">
       <h3>Correct Answers (Review)</h3>
       <ol id="answerList"></ol>
     </div>
@@ -107,123 +127,252 @@ button.primary{
 <script>
 /* ---------------- QUESTION BANK ---------------- */
 const QUESTIONS = [
- {q:"Actions are judged by their consequences.", a:"Consequentialism",
-  d:["Deontology","Dataveillance","Cyberpiracy"]},
+  { q:"Ethics approach: actions are wrong if they have bad consequences.", a:"Consequentialism",
+    d:["Deontology","Dataveillance","Cyberpiracy"] },
 
- {q:"Moral duties exist independent of outcomes.", a:"Deontology",
-  d:["Consequentialism","Spyware","Cybersecurity"]},
+  { q:"Ethics approach: people have moral duties independent of consequences.", a:"Deontology",
+    d:["Consequentialism","Spyware","Cybersecurity"] },
 
- {q:"Protection of data during storage or transmission.", a:"Information security",
-  d:["System security","Hacktivism","Computer matching"]},
+  { q:"Protection of data on disks or during transmission.", a:"Information security",
+    d:["System security","Hacktivism","Computer matching"] },
 
- {q:"Protection of hardware and software resources.", a:"System security",
-  d:["Information security","Cookies","Data mining"]},
+  { q:"Protection of hardware and software resources from sabotage.", a:"System security",
+    d:["Information security","Cookies","Data mining"] },
 
- {q:"Three pillars of information security.", a:"CIA triad",
-  d:["VPN","Authentication","Encryption"]},
+  { q:"Three classic aspects of information security.", a:"CIA triad",
+    d:["VPN","Two-factor authentication","Public key"] },
 
- {q:"Unauthorized system access using skills.", a:"Hacking",
-  d:["Biometrics","Record merging","Informed consent"]},
+  { q:"Unauthorized access to computer resources using technical skills.", a:"Hacking",
+    d:["Biometrics","Record merging","Informed consent"] },
 
- {q:"Illegal copying of proprietary software.", a:"Cyberpiracy",
-  d:["Hacktivism","Cyberterrorism","Cybertrespass"]},
+  { q:"Reproducing/distributing proprietary software illegally.", a:"Cyberpiracy",
+    d:["Hacktivism","Cyberterrorism","Cybertrespass"] },
 
- {q:"Large-scale electronic monitoring.", a:"Dataveillance",
-  d:["Cookies","Integrity","Firewall"]},
+  { q:"Large-scale computerized monitoring of individuals.", a:"Dataveillance",
+    d:["Cookies","Integrity","Firewall"] },
 
- {q:"Identity verification using physical traits.", a:"Biometrics",
-  d:["Spyware","Cookies","Record merging"]},
+  { q:"Identity verification using physiological/behavioral characteristics.", a:"Biometrics",
+    d:["Spyware","Cookies","Record merging"] },
 
- {q:"Context-aware pervasive computing.", a:"Ambient intelligence",
-  d:["Ubiquitous computing","System security","Availability"]}
+  { q:"Advanced ubiquitous computing using context awareness and profiling.", a:"Ambient intelligence",
+    d:["Ubiquitous computing","System security","Availability"] }
 ];
 
-/* ---------------- GAME STATE ---------------- */
+/* ---------------- UI ---------------- */
 const grid = document.getElementById("grid");
 const promptEl = document.getElementById("prompt");
-const feedback = document.getElementById("feedback");
+const feedbackEl = document.getElementById("feedback");
+const startBtn = document.getElementById("startBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const roundLabel = document.getElementById("roundLabel");
+const correctLabel = document.getElementById("correctLabel");
+const wrongLabel = document.getElementById("wrongLabel");
+
 const answerReview = document.getElementById("answerReview");
 const answerList = document.getElementById("answerList");
 
-let current = 0;
-let played = [];
+/* ---------------- GAME STATE ---------------- */
 let running = false;
+let paused = false;
 
-/* ---------------- INIT GRID ---------------- */
-for(let i=0;i<9;i++){
-  const h=document.createElement("div");
-  h.className="hole";
-  grid.appendChild(h);
+let idx = 0;
+let correct = 0;
+let wrong = 0;
+
+let played = [];         // store played questions for final review
+let holes = [];          // DOM references to the 9 holes
+let activeTimer = null;  // option auto-hide timer
+
+/* ---------------- HELPERS ---------------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
 }
 
-/* ---------------- GAME LOGIC ---------------- */
-function startGame(){
-  running=true;
-  current=0;
-  played=[];
-  answerReview.style.display="none";
-  nextQuestion();
+function setFeedback(type, text){
+  feedbackEl.textContent = text;
+  feedbackEl.className = "toast " + (type || "");
 }
 
-function nextQuestion(){
-  grid.innerHTML="";
-  feedback.textContent="";
+function buildHoles(){
+  grid.innerHTML = "";
+  holes = [];
+  for(let i=0;i<9;i++){
+    const h = document.createElement("div");
+    h.className = "hole";
+    grid.appendChild(h);
+    holes.push(h);
+  }
+}
 
-  if(current>=QUESTIONS.length){
+function clearRoundTimers(){
+  if(activeTimer) clearTimeout(activeTimer);
+  activeTimer = null;
+}
+
+function updateStats(){
+  roundLabel.textContent = `${Math.min(idx, QUESTIONS.length)}/${QUESTIONS.length}`;
+  correctLabel.textContent = String(correct);
+  wrongLabel.textContent = String(wrong);
+}
+
+/* ---------------- ROUND LOGIC ---------------- */
+function showRound(){
+  clearRoundTimers();
+  buildHoles();
+  setFeedback("", "");
+  answerReview.style.display = "none";
+
+  if(idx >= QUESTIONS.length){
     endGame();
     return;
   }
 
-  const Q = QUESTIONS[current];
+  const Q = QUESTIONS[idx];
   played.push(Q);
-
   promptEl.textContent = Q.q;
 
-  const options = [Q.a,...Q.d].sort(()=>Math.random()-0.5);
+  // Exactly 4 options: 1 correct + 3 distractors (unique)
+  const pool = [Q.a, ...Q.d].filter(Boolean);
+  const unique = [];
+  for(const x of pool){
+    if(!unique.includes(x)) unique.push(x);
+  }
+  const options = shuffle(unique.slice(0,4));
 
-  options.forEach(opt=>{
-    const m=document.createElement("div");
-    m.className="mole";
-    m.textContent=opt;
-    m.onclick=()=>select(opt,Q.a);
-    grid.children[Math.floor(Math.random()*9)].appendChild(m);
+  // Place each option in a random empty hole
+  const available = shuffle([0,1,2,3,4,5,6,7,8]);
+  options.forEach((opt) => {
+    const holeIndex = available.pop();
+    const hole = holes[holeIndex];
+
+    const mole = document.createElement("div");
+    mole.className = "mole";
+    mole.textContent = opt;
+
+    mole.addEventListener("click", () => choose(opt, Q.a));
+    hole.appendChild(mole);
+    requestAnimationFrame(()=> mole.classList.add("show"));
   });
+
+  // Optional gentle auto-clear after 6 seconds to keep the board fresh
+  // (still low load; no speed pressure)
+  activeTimer = setTimeout(() => {
+    if(!running || paused) return;
+    // Just rebuild same round layout (no penalty)
+    showRound();
+  }, 6000);
+
+  updateStats();
 }
 
-function select(choice, correct){
-  if(!running) return;
+function choose(choice, correctAnswer){
+  if(!running || paused) return;
 
-  if(choice===correct){
-    feedback.textContent="Correct!";
-    feedback.className="toast good";
-    current++;
-    setTimeout(nextQuestion,600);
-  }else{
-    feedback.textContent="Wrong!";
-    feedback.className="toast bad";
+  if(choice === correctAnswer){
+    correct += 1;
+    setFeedback("good", "Correct!");
+    idx += 1;
+    updateStats();
+    setTimeout(() => {
+      if(running) showRound();
+    }, 600);
+  } else {
+    wrong += 1;
+    setFeedback("bad", "Wrong!");
+    updateStats();
   }
 }
 
-function endGame(){
-  running=false;
-  promptEl.textContent="Game Over. Review correct answers below.";
-  grid.innerHTML="";
-  feedback.textContent="";
+/* ---------------- GAME CONTROL ---------------- */
+function startGame(){
+  running = true;
+  paused = false;
 
-  answerList.innerHTML="";
-  played.forEach((q,i)=>{
-    const li=document.createElement("li");
-    li.innerHTML=`<strong>Q${i+1}:</strong> ${q.q}<br>
-                  <em>Correct answer:</em> ${q.a}`;
-    answerList.appendChild(li);
-  });
+  idx = 0;
+  correct = 0;
+  wrong = 0;
+  played = [];
 
-  answerReview.style.display="block";
+  startBtn.disabled = true;
+  pauseBtn.disabled = false;
+  pauseBtn.textContent = "Pause";
+
+  promptEl.textContent = "Starting…";
+  showRound();
 }
 
-/* ---------------- CONTROLS ---------------- */
-document.getElementById("startBtn").onclick=startGame;
-document.getElementById("resetBtn").onclick=()=>location.reload();
+function togglePause(){
+  if(!running) return;
+  paused = !paused;
+  pauseBtn.textContent = paused ? "Resume" : "Pause";
+  if(paused){
+    clearRoundTimers();
+    setFeedback("", "Paused");
+  } else {
+    setFeedback("", "");
+    showRound();
+  }
+}
+
+function resetGame(){
+  running = false;
+  paused = false;
+  clearRoundTimers();
+  buildHoles();
+  played = [];
+
+  startBtn.disabled = false;
+  pauseBtn.disabled = true;
+  pauseBtn.textContent = "Pause";
+
+  idx = 0;
+  correct = 0;
+  wrong = 0;
+  updateStats();
+
+  promptEl.textContent = "Press Start to begin.";
+  setFeedback("", "");
+  answerReview.style.display = "none";
+}
+
+function endGame(){
+  running = false;
+  paused = false;
+  clearRoundTimers();
+  buildHoles();
+  setFeedback("", "");
+
+  promptEl.textContent = `Game Over. Correct: ${correct}, Wrong: ${wrong}. Review the correct answers below.`;
+
+  answerList.innerHTML = "";
+  played.forEach((q, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>Q${i+1}.</strong> ${q.q}<br><em>Correct:</em> ${q.a}`;
+    answerList.appendChild(li);
+  });
+  answerReview.style.display = "block";
+
+  startBtn.disabled = false;
+  pauseBtn.disabled = true;
+  pauseBtn.textContent = "Pause";
+
+  updateStats();
+}
+
+/* ---------------- INIT ---------------- */
+buildHoles();
+updateStats();
+
+startBtn.addEventListener("click", startGame);
+pauseBtn.addEventListener("click", togglePause);
+resetBtn.addEventListener("click", resetGame);
 </script>
 </body>
 </html>
